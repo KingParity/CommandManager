@@ -7,10 +7,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.nemez.cmdmgr.Command;
 import com.nemez.cmdmgr.CommandManager;
 
-public class CmdMgrTest extends JavaPlugin {
+public class CmdMgrExample extends JavaPlugin {
 
 	public void onEnable() {
-		CommandManager.registerCommand(new File("plugins/test.cmd"), this, this);
+		CommandManager.registerCommand(new File("plugins/example.cmd"), this, this);
 	}
 	
 	public void onDisable() {

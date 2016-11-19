@@ -1,3 +1,4 @@
+package com.nemez.cmdMgrExample;
 
 import java.io.File;
 

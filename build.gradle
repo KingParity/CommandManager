@@ -4,18 +4,16 @@ archivesBaseName = 'CommandManager'
 version = '2.0' 
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.5'    
+    gradleVersion = '3.2.1'    
 }
 
 repositories {
   maven {
     // spigot
     url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
-    // spigot dependencies
-    url "https://hub.spigotmc.org/nexus/content/repositories/public/"
   }
 }
 
 dependencies {
-  compile 'org.bukkit:bukkit:1.10.2-R0.1-SNAPSHOT'
+  compile 'org.bukkit:bukkit:1.11.2-R0.1-SNAPSHOT'
 }

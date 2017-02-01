@@ -1,3 +1,4 @@
+//@noformat
 package com.nemez.cmdmgr;
 
 import java.io.BufferedReader;
@@ -99,6 +100,10 @@ public class CommandManager {
 	public static String helpInvalidPageFormatting = "&c";
 	public static String noPermissionFormatting = "&c";
 	public static String notAllowedFormatting = "&c";
+	
+	/* List of all commands that can be invoked async */
+	public static ArrayList<Executable> asyncExecutables = new ArrayList<Executable>();
+	/*  */
 	
 	/**
 	 * Registers a command from a String of source code
@@ -626,4 +631,4 @@ public class CommandManager {
 		
 		return data;
 	}
-}
+}//@format

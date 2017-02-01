@@ -1,3 +1,4 @@
+//@noformat
 package com.nemez.cmdmgr.util;
 
 import java.lang.reflect.Field;
@@ -14,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.nemez.cmdmgr.Command;
+import com.nemez.cmdmgr.Command.AsyncType;
 import com.nemez.cmdmgr.CommandManager;
 import com.nemez.cmdmgr.component.BooleanComponent;
 import com.nemez.cmdmgr.component.ByteComponent;
@@ -263,8 +265,15 @@ public class Executable extends org.bukkit.command.Command {
 		if (etype == null) {
 			etype = Type.BOTH;
 		}
-		ExecutableDefinition def = new ExecutableDefinition(command, links, permission, target, methodContainer, etype);
+		ExecutableDefinition def;
+		AsyncType type = target.getAnnotation(Command.class).async();
+		if (type == AsyncType.ALWAYS)
+			def = new AsyncExecutableDefinition(command, links, permission, target, methodContainer, etype);
+		else
+			def = new ExecutableDefinition(command, links, permission, target, methodContainer, etype);
 		commands.add(def);
+		if (def instanceof AsyncExecutableDefinition)
+			CommandManager.asyncExecutables.add(this);
 	}
 	
 	@Override
@@ -426,3 +435,4 @@ public class Executable extends org.bukkit.command.Command {
 		}
 	}
 }
+//@format

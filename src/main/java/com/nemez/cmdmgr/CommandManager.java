@@ -144,7 +144,7 @@ public class CommandManager {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
 			while ((buf = reader.readLine()) != null) {
-				src.append(buf);
+				src.append(buf + '\n');
 			}
 			reader.close();
 		} catch (Exception e) {
@@ -170,7 +170,7 @@ public class CommandManager {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(sourceStream));
 			while ((buf = reader.readLine()) != null) {
-				src.append(buf);
+				src.append(buf + '\n');
 			}
 			reader.close();
 		} catch (Exception e) {

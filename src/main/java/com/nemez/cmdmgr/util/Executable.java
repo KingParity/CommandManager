@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
@@ -88,6 +89,11 @@ public class Executable extends org.bukkit.command.Command {
 			final Field cmdMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
 			cmdMap.setAccessible(true);
 			CommandMap map = (CommandMap) cmdMap.get(Bukkit.getServer());
+			final Field knownCommandsField = map.getClass().getDeclaredField("knownCommands");
+			knownCommandsField.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
+			knownCommands.remove(name);
 			map.register(name, this);
 		} catch (Exception e) {
 			plugin.getLogger().log(Level.SEVERE, "Failed to register command '" + name + "'!");

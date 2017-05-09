@@ -1,3 +1,4 @@
+//@noformat
 package com.nemez.cmdmgr;
 
 import java.io.BufferedReader;
@@ -5,11 +6,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandMap;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.nemez.cmdmgr.component.ArgumentComponent;
@@ -100,6 +106,11 @@ public class CommandManager {
 	public static String noPermissionFormatting = "&c";
 	public static String notAllowedFormatting = "&c";
 	
+	/* List of all commands that can be invoked async */
+	public static ArrayList<Executable> asyncExecutables = new ArrayList<Executable>();
+	public static HashMap<Object, ArrayList<String>> commands = new HashMap<Object, ArrayList<String>>();
+	/*  */
+	
 	/**
 	 * Registers a command from a String of source code
 	 * 
@@ -139,7 +150,7 @@ public class CommandManager {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
 			while ((buf = reader.readLine()) != null) {
-				src.append(buf);
+				src.append(buf + '\n');
 			}
 			reader.close();
 		} catch (Exception e) {
@@ -165,7 +176,7 @@ public class CommandManager {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(sourceStream));
 			while ((buf = reader.readLine()) != null) {
-				src.append(buf);
+				src.append(buf + '\n');
 			}
 			reader.close();
 		} catch (Exception e) {
@@ -175,6 +186,28 @@ public class CommandManager {
 			return false;
 		}
 		return registerCommand(src.toString(), commandHandler, plugin);
+	}
+	
+
+	public static void unregisterAll(String[] commands)
+	{
+		for (String name : commands)
+		{
+			EmptyCommand emptyCommand = new EmptyCommand(name);
+			try {
+				final Field cmdMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+				cmdMap.setAccessible(true);
+				CommandMap map = (CommandMap) cmdMap.get(Bukkit.getServer());
+				final Field knownCommandsField = map.getClass().getDeclaredField("knownCommands");
+				knownCommandsField.setAccessible(true);
+				@SuppressWarnings("unchecked")
+				Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
+				knownCommands.remove(name);
+				map.register(name, emptyCommand);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**
@@ -626,4 +659,4 @@ public class CommandManager {
 		
 		return data;
 	}
-}
+}//@format

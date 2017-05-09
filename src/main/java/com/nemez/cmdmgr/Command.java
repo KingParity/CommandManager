@@ -7,7 +7,14 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Command {
-
+public @interface Command
+{
+	enum AsyncType
+	{
+		NEVER, ALWAYS;
+	}
+	
 	String hook();
+	
+	AsyncType async() default AsyncType.NEVER;
 }

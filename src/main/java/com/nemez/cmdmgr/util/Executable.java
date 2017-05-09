@@ -1,9 +1,11 @@
+//@noformat
 package com.nemez.cmdmgr.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
@@ -14,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.nemez.cmdmgr.Command;
+import com.nemez.cmdmgr.Command.AsyncType;
 import com.nemez.cmdmgr.CommandManager;
 import com.nemez.cmdmgr.component.BooleanComponent;
 import com.nemez.cmdmgr.component.ByteComponent;
@@ -86,6 +89,11 @@ public class Executable extends org.bukkit.command.Command {
 			final Field cmdMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
 			cmdMap.setAccessible(true);
 			CommandMap map = (CommandMap) cmdMap.get(Bukkit.getServer());
+			final Field knownCommandsField = map.getClass().getDeclaredField("knownCommands");
+			knownCommandsField.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
+			knownCommands.remove(name);
 			map.register(name, this);
 		} catch (Exception e) {
 			plugin.getLogger().log(Level.SEVERE, "Failed to register command '" + name + "'!");
@@ -263,8 +271,15 @@ public class Executable extends org.bukkit.command.Command {
 		if (etype == null) {
 			etype = Type.BOTH;
 		}
-		ExecutableDefinition def = new ExecutableDefinition(command, links, permission, target, methodContainer, etype);
+		ExecutableDefinition def;
+		AsyncType type = target.getAnnotation(Command.class).async();
+		if (type == AsyncType.ALWAYS)
+			def = new AsyncExecutableDefinition(command, links, permission, target, methodContainer, etype);
+		else
+			def = new ExecutableDefinition(command, links, permission, target, methodContainer, etype);
 		commands.add(def);
+		if (def instanceof AsyncExecutableDefinition)
+			CommandManager.asyncExecutables.add(this);
 	}
 	
 	@Override
@@ -426,3 +441,4 @@ public class Executable extends org.bukkit.command.Command {
 		}
 	}
 }
+//@format

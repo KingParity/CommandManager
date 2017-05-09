@@ -414,10 +414,10 @@ public class CommandManager {
 					buffer.append(' ');
 				}else{
 					/* we got the 'command' definition, the name of the command will follow */
-					if (buffer.toString().equals("command") && !gettingName && cmdName == null) {
+					if (buffer.toString().equals("command") && !gettingName && !gettingAlias && cmdName == null) {
 						gettingName = true;
 					/* we got other properties, their values will follow */
-					}else if (buffer.toString().equals("alias") && !gettingAlias) {
+					}else if (buffer.toString().equals("alias") && !gettingAlias && !gettingName) {
 						gettingAlias = true;
 					}else if (buffer.toString().equals("help")) {
 						currentProp = Property.HELP;

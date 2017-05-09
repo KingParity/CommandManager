@@ -295,41 +295,28 @@ public class Executable extends org.bukkit.command.Command {
 		if (args_.length == 0) {
 			args = new String[0];
 		}else{
-			char[] rawArgs = (String.join(" ", args_) + ' ').toCharArray();
-			int argSize = 0;
-			char last = '\0';
-			boolean inString = false;
-			
-			for (char c : rawArgs) {
-				if (c == '"') {
-					if (last != '\\') {
-						inString = !inString;
-					}
-				}else if (c == ' ' && !inString) {
-					argSize++;
-				}
-				last = c;
-			}
-			last = '\0';
-			args = new String[argSize];
-			String buffer = "";
-			int index = 0;
-
-			for (char c : rawArgs) {
-				if (c == '"') {
-					if (last != '\\') {
-						inString = !inString;
+			ArrayList<String> tempArgs = new ArrayList<String>();
+			String temp = "";
+			int counter = 0;
+			for (String s : args_) {
+				if (s.endsWith("\\")) {
+					if ((s.length() > 1 && s.charAt(s.length() - 2) == '\\') || counter + 1 == args_.length) {
+						// escaped \
+						tempArgs.add(temp + s.replace("\\\\", "\\"));
+						temp = "";
 					}else{
-						buffer = buffer.substring(0, buffer.length() - 1) + '"';
+						// unescaped \
+						temp += s.substring(0, s.length() - 1).replace("\\\\", "\\") + " ";
 					}
-				}else if (c == ' ' && !inString) {
-					args[index] = buffer;
-					buffer = "";
-					index++;
 				}else{
-					buffer += c;
+					tempArgs.add(temp + s);
+					temp = "";
 				}
-				last = c;
+				counter++;
+			}
+			args = new String[tempArgs.size()];
+			for (int i = 0; i < args.length; i++) {
+				args[i] = tempArgs.get(i);
 			}
 		}
 		ArrayList<ExecutableDefinition> defs = new ArrayList<ExecutableDefinition>();

@@ -11,6 +11,7 @@ public class ChainComponent implements ICommandComponent {
 	public String help;
 	public String execute;
 	public Type type;
+	public ArrayList<String> aliases = new ArrayList<String>();
 	
 	public ChainComponent() {
 		components = new ArrayList<ICommandComponent>();
@@ -47,4 +48,8 @@ public class ChainComponent implements ICommandComponent {
 	public ArrayList<ICommandComponent> getComponents() {
 		return components;
 	}
+	
+	public ArrayList<String> getAliases() {
+            return aliases;
+        }
 }

@@ -44,7 +44,7 @@ public class Executable extends org.bukkit.command.Command {
 		this.commands = new ArrayList<ExecutableDefinition>();
 	}
 	
-	public void register(ArrayList<Method> methods, JavaPlugin plugin, Object methodContainer) {
+	public void register(ArrayList<Method> methods, JavaPlugin plugin, Object methodContainer, ArrayList<String> aliases) {
 		for (HelpPageCommand[] page : help) {
 			for (HelpPageCommand cmd : page) {
 				if (cmd != null) {
@@ -95,6 +95,13 @@ public class Executable extends org.bukkit.command.Command {
 			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
 			knownCommands.remove(name);
 			map.register(name, this);
+			for (String alias : aliases) {
+                            Executable cmd = new Executable(alias, this.help);
+                            cmd.commands = this.commands;
+                            cmd.plugin = this.plugin;
+                            knownCommands.remove(alias);
+                            map.register(alias, cmd);
+			}
 		} catch (Exception e) {
 			plugin.getLogger().log(Level.SEVERE, "Failed to register command '" + name + "'!");
 			e.printStackTrace();

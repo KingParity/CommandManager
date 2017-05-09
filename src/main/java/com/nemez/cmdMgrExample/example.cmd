@@ -1,6 +1,7 @@
 
 command home {
-
+        alias h;
+        alias bleh;
 	set [string:name] {
 		[int:x] [int:y] [int:z] {
 			run home_set_coords name x y z;

@@ -230,6 +230,8 @@ public class CommandManager {
 		boolean insideType = false;
 		/* if we are currently gathering chars from the command name */
 		boolean gettingName = false;
+		/* if we are currently gathering chars for aliases */
+		boolean gettingAlias = false;
 		/* the previous char, used for backslash escaping */
 		char previous = '\0';
 		/* the current 'array' of sub-commands we are parsing */
@@ -246,7 +248,7 @@ public class CommandManager {
 		int line = 0;
 		// buffer for '...' and '"' properties of string types
 		StringBuilder sideBuffer = new StringBuilder();
-
+		
 		/* iterate over all characters */
 		for (int i = 0; i < chars.length; i++) {
 			/* get current char */
@@ -288,7 +290,7 @@ public class CommandManager {
 			/* help this is an example; */
 			/*                        ^ */
 			}else if (current == ';') {
-				/* semicolon is bashslash escaped, treat it as a normal character */
+				/* semicolon is backslash escaped, treat it as a normal character */
 				if (previous == '\\') {
 					buffer.append(';');
 				}else{
@@ -299,7 +301,10 @@ public class CommandManager {
 						return false;
 					}
 					/* we are defining the 'help' property, set it to what we just gathered */
-					if (currentProp == Property.HELP) {
+					if (gettingAlias) {
+						stack.get().aliases.add(buffer.toString());
+						gettingAlias = false;
+					}else if (currentProp == Property.HELP) {
 						stack.get().help = buffer.toString();
 					/* same as above, except its the function to run */
 					}else if (currentProp == Property.EXECUTE) {
@@ -412,6 +417,8 @@ public class CommandManager {
 					if (buffer.toString().equals("command") && !gettingName && cmdName == null) {
 						gettingName = true;
 					/* we got other properties, their values will follow */
+					}else if (buffer.toString().equals("alias") && !gettingAlias) {
+						gettingAlias = true;
 					}else if (buffer.toString().equals("help")) {
 						currentProp = Property.HELP;
 					}else if (buffer.toString().equals("run")) {
@@ -596,7 +603,7 @@ public class CommandManager {
 		components.permission = null;
 		components.type = null;
 		Executable cmd = new Executable(cmdName, constructHelpPages(cmdName, components));
-		cmd.register(methods, plugin, methodContainer);
+		cmd.register(methods, plugin, methodContainer, components.getAliases());
 	}
 	
 	private static ArrayList<HelpPageCommand[]> constructHelpPages(String cmdName, ChainComponent root) {

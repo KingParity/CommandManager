@@ -339,6 +339,7 @@ public class CommandManager {
 				if (gettingName && cmdName == null) {
 					/* set the command name to what we just gathered (trimmed) */
 					cmdName = buffer.toString().trim();
+					gettingName = false;
 				}else{
 					/* are we currently in an argument? */
 					if (currentArgComp == null) {
@@ -434,6 +435,7 @@ public class CommandManager {
 						/* we are getting the name and we didn't set it yet, set it */
 						if (gettingName && cmdName == null) {
 							cmdName = buffer.toString().trim();
+							gettingName = false;
 						}else{
 							/* we aren't defining a type, put the current text into the sub-command as a constant */
 							if (currentArgComp == null) {

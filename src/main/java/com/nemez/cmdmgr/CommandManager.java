@@ -188,7 +188,122 @@ public class CommandManager {
 		return registerCommand(src.toString(), commandHandler, plugin);
 	}
 	
+	/**
+	 * Unregisters all commands from a source File
+	 * 
+	 * @param sourceFile file containing source code
+	 * @param plugin your plugin class
+	 */
+	public static void unregisterCommands(File sourceFile, JavaPlugin plugin) {
+		StringBuilder src = new StringBuilder();
+		String buf = "";
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
+			while ((buf = reader.readLine()) != null) {
+				src.append(buf + '\n');
+			}
+			reader.close();
+		} catch (Exception e) {
+			plugin.getLogger().log(Level.WARNING, "Error while loading command file. (" + sourceFile.getAbsolutePath() + ")");
+			plugin.getLogger().log(Level.WARNING, e.getCause().toString());
+			return;
+		}
+		unregisterCommands(src.toString());
+	}
+	
+	/**
+	 * Unregisters all commands from an InputStream
+	 * 
+	 * @param sourceStream input stream containing source code
+	 * @param plugin your plugin class
+	 */
+	public static void unregisterCommands(InputStream sourceStream, JavaPlugin plugin) {
+		StringBuilder src = new StringBuilder();
+		String buf = "";
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(sourceStream));
+			while ((buf = reader.readLine()) != null) {
+				src.append(buf + '\n');
+			}
+			reader.close();
+		} catch (Exception e) {
+			plugin.getLogger().log(Level.WARNING, "Error while loading command file. (" + sourceStream.toString() + ")");
+			plugin.getLogger().log(Level.WARNING, e.getCause().toString());
+			return;
+		}
+		unregisterCommands(src.toString());
+	}
+	
+	/**
+	 * Unregisters all commands from a String of source code
+	 * 
+	 * @param cmdSourceCode source code
+	 */
+	public static void unregisterCommands(String cmdSourceCode) {
+		if (cmdSourceCode == null) {
+			return;
+		}
+		parseUnregister(cmdSourceCode);
+	}
+	
+	public static void parseUnregister(String src) {
+		char[] chars = src.toCharArray();
+		StringBuilder buffer = new StringBuilder();
+		int nesting = 0;
+		
+		for (int i = 0; i < chars.length; i++) {
+			char c = chars[i];
+			
+			if (c == ';') {
+				if (nesting == 1) {
+					String[] alias = buffer.toString().trim().split("\\ ");
+					if (alias.length == 2 && alias[0].equals("alias")) {
+						unregisterCommand(alias[1]);
+					}
+				}
+				buffer = new StringBuilder();
+			}else if (c == '{') {
+				if (nesting == 0) {
+					String[] command = buffer.toString().trim().split("\\ ");
+					if (command.length == 2 && command[0].equals("command")) {
+						unregisterCommand(command[1]);
+					}
+				}
+				if (c == '{') {
+					nesting++;
+				}
+				buffer = new StringBuilder();
+			}else if (c == '}') {
+				nesting--;
+				buffer = new StringBuilder();
+			}else {
+				buffer.append(c);
+			}
+		}
+	}
 
+	/**
+	 * Unregisters a command specified by its name or alias
+	 * 
+	 * @param name name or alias of command
+	 */
+	public static void unregisterCommand(String name) {
+		EmptyCommand empty = new EmptyCommand(name);
+		try {
+			final Field mapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+			mapField.setAccessible(true);
+			CommandMap map = (CommandMap) mapField.get(Bukkit.getServer());
+			final Field knownCommandsField = mapField.getClass().getDeclaredField("knownCommands");
+			knownCommandsField.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
+			knownCommands.remove(name);
+			map.register(name, empty);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void unregisterAll(String[] commands)
 	{
 		for (String name : commands)

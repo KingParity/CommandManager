@@ -1,0 +1,4 @@
+name: CommandManagerTest
+main: com.nemez.cmdMgrExample.CmdMgrExample
+version: 13.37
+author: Nemes

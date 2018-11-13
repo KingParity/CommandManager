@@ -293,7 +293,7 @@ public class CommandManager {
 			final Field mapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");
 			mapField.setAccessible(true);
 			CommandMap map = (CommandMap) mapField.get(Bukkit.getServer());
-			final Field knownCommandsField = mapField.getClass().getDeclaredField("knownCommands");
+			final Field knownCommandsField = mapField.getClass().getSuperclass().getDeclaredField("knownCommands");
 			knownCommandsField.setAccessible(true);
 			@SuppressWarnings("unchecked")
 			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
@@ -313,7 +313,7 @@ public class CommandManager {
 				final Field cmdMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
 				cmdMap.setAccessible(true);
 				CommandMap map = (CommandMap) cmdMap.get(Bukkit.getServer());
-				final Field knownCommandsField = map.getClass().getDeclaredField("knownCommands");
+				final Field knownCommandsField = map.getClass().getSuperclass().getDeclaredField("knownCommands");
 				knownCommandsField.setAccessible(true);
 				@SuppressWarnings("unchecked")
 				Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);

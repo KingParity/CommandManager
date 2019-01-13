@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -154,6 +155,7 @@ public class CommandManager {
 			}
 			reader.close();
 		} catch (Exception e) {
+			e.printStackTrace();
 			plugin.getLogger().log(Level.WARNING, "Error while loading command file. (" + sourceFile.getAbsolutePath() + ")");
 			plugin.getLogger().log(Level.WARNING, e.getCause().toString());
 			errors = true;
@@ -322,6 +324,41 @@ public class CommandManager {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	public static void unregisterAllWithFallback(String fallback) {
+		try {
+			final Field cmdMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+			cmdMap.setAccessible(true);
+			CommandMap map = (CommandMap) cmdMap.get(Bukkit.getServer());
+			final Field knownCommandsField = map.getClass().getSuperclass().getDeclaredField("knownCommands");
+			knownCommandsField.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, org.bukkit.command.Command> knownCommands = (Map<String, org.bukkit.command.Command>) knownCommandsField.get(map);
+			
+			fallback = fallback.toLowerCase();
+			System.out.println(fallback);
+			
+			List<String> toRemove = new ArrayList<>();
+
+			for (String key: knownCommands.keySet()) {
+				org.bukkit.command.Command value  = knownCommands.get(key);
+				if ((value instanceof Executable) && ((Executable)value).getMethodContainerName().equals(fallback)) {
+						toRemove.add(key);
+						value.unregister(map);
+				}
+			}
+			for (String key : toRemove) {
+				//EmptyCommand emptyCommand = new EmptyCommand(key);
+				knownCommands.remove(key);
+				//map.register(key, emptyCommand);
+				System.out.println("Unregestered " + key);
+			}
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -719,7 +756,7 @@ public class CommandManager {
 		components.help = null;
 		components.permission = null;
 		components.type = null;
-		Executable cmd = new Executable(cmdName, constructHelpPages(cmdName, components));
+		Executable cmd = new Executable(cmdName, constructHelpPages(cmdName, components), methodContainer.getClass().getSimpleName());
 		cmd.register(methods, plugin, methodContainer, components.getAliases());
 	}
 	

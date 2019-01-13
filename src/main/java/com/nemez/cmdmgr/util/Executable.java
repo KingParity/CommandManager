@@ -35,17 +35,23 @@ public class Executable extends org.bukkit.command.Command {
 	private ArrayList<ExecutableDefinition> commands;
 	private ArrayList<HelpPageCommand[]> help;
 	private String name;
+	private String methodContainerName;
 	private JavaPlugin plugin;
 	
-	public Executable(String name, ArrayList<HelpPageCommand[]> help) {
+	public Executable(String name, ArrayList<HelpPageCommand[]> help, String methodContainerName) {
 		super(name);
 		this.help = help;
 		this.name = name;
 		this.commands = new ArrayList<ExecutableDefinition>();
+		this.methodContainerName = methodContainerName;
+	}
+	
+	public String getMethodContainerName() {
+		return methodContainerName;
 	}
 	
 	public void register(ArrayList<Method> methods, JavaPlugin plugin, Object methodContainer, ArrayList<String> aliases) {
-		String moduleName = methodContainer.getClass().getSimpleName();
+		methodContainerName = methodContainer.getClass().getSimpleName().toLowerCase();
 		for (HelpPageCommand[] page : help) {
 			for (HelpPageCommand cmd : page) {
 				if (cmd != null) {
@@ -95,13 +101,13 @@ public class Executable extends org.bukkit.command.Command {
 			@SuppressWarnings("unchecked")
 			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
 			knownCommands.remove(name);
-			map.register(moduleName, this);
+			map.register(methodContainerName, this);
 			for (String alias : aliases) {
-                            Executable cmd = new Executable(alias, this.help);
+                            Executable cmd = new Executable(alias, this.help, methodContainerName);
                             cmd.commands = this.commands;
                             cmd.plugin = this.plugin;
                             knownCommands.remove(alias);
-                            map.register(moduleName, cmd);
+                            map.register(methodContainerName, cmd);
 			}
 		} catch (Exception e) {
 			plugin.getLogger().log(Level.SEVERE, "Failed to register command '" + name + "'!");

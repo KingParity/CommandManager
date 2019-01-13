@@ -338,7 +338,6 @@ public class CommandManager {
 			Map<String, org.bukkit.command.Command> knownCommands = (Map<String, org.bukkit.command.Command>) knownCommandsField.get(map);
 			
 			fallback = fallback.toLowerCase();
-			System.out.println(fallback);
 			
 			List<String> toRemove = new ArrayList<>();
 
@@ -350,10 +349,9 @@ public class CommandManager {
 				}
 			}
 			for (String key : toRemove) {
-				//EmptyCommand emptyCommand = new EmptyCommand(key);
+				EmptyCommand emptyCommand = new EmptyCommand(key);
 				knownCommands.remove(key);
-				//map.register(key, emptyCommand);
-				System.out.println("Unregestered " + key);
+				map.register(key, emptyCommand);
 			}
 			
 			

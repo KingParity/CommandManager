@@ -3,11 +3,11 @@ package com.nemez.cmdmgr.component;
 public class ConstantComponent implements ICommandComponent {
 
 	private String component;
-	
+
 	public ConstantComponent(String comp) {
 		component = comp;
 	}
-	
+
 	@Override
 	public Object get(String input) {
 		if (input.equals(component)) {
@@ -25,7 +25,7 @@ public class ConstantComponent implements ICommandComponent {
 	public String argName() {
 		return null;
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
 		return component;

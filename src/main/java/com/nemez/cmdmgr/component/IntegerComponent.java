@@ -20,7 +20,7 @@ public class IntegerComponent extends ArgumentComponent {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
 		return "<" + argName + ":i32>";

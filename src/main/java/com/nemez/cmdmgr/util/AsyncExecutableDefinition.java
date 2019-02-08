@@ -1,29 +1,23 @@
 package com.nemez.cmdmgr.util;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-
+import com.nemez.cmdmgr.component.ICommandComponent;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.nemez.cmdmgr.component.ICommandComponent;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 
-public class AsyncExecutableDefinition extends ExecutableDefinition
-{
+public class AsyncExecutableDefinition extends ExecutableDefinition {
 	public AsyncExecutableDefinition(ArrayList<ICommandComponent> cmd, ArrayList<Integer> paramLinks, String perm,
-			Method method, Object methodContainer, Type type)
-	{
+	                                 Method method, Object methodContainer, Type type) {
 		super(cmd, paramLinks, perm, method, methodContainer, type);
 	}
-	
+
 	@Override
-	public boolean invoke(Object[] args, CommandSender sender, JavaPlugin plugin)
-	{
-		Thread t = new Thread(new Runnable()
-		{
+	public boolean invoke(Object[] args, CommandSender sender, JavaPlugin plugin) {
+		Thread t = new Thread(new Runnable() {
 			@Override
-			public void run()
-			{
+			public void run() {
 				invokeFromThread(args, sender, plugin);
 			}
 		});
@@ -31,9 +25,8 @@ public class AsyncExecutableDefinition extends ExecutableDefinition
 		t.start();
 		return true;
 	}
-	
-	private final void invokeFromThread(Object[] args, CommandSender sender, JavaPlugin plugin)
-	{
+
+	private final void invokeFromThread(Object[] args, CommandSender sender, JavaPlugin plugin) {
 		super.invoke(args, sender, plugin);
 	}
 }

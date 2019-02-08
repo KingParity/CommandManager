@@ -11,7 +11,7 @@ public class EmptyComponent extends ArgumentComponent {
 	public boolean valid(String input) {
 		return true;
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
 		return "<empty>";

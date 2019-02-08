@@ -1,13 +1,10 @@
 //@noformat
 package com.nemez.cmdmgr.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-
+import com.nemez.cmdmgr.Command;
+import com.nemez.cmdmgr.Command.AsyncType;
+import com.nemez.cmdmgr.CommandManager;
+import com.nemez.cmdmgr.component.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandMap;
@@ -15,29 +12,21 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.nemez.cmdmgr.Command;
-import com.nemez.cmdmgr.Command.AsyncType;
-import com.nemez.cmdmgr.CommandManager;
-import com.nemez.cmdmgr.component.BooleanComponent;
-import com.nemez.cmdmgr.component.ByteComponent;
-import com.nemez.cmdmgr.component.ConstantComponent;
-import com.nemez.cmdmgr.component.DoubleComponent;
-import com.nemez.cmdmgr.component.FloatComponent;
-import com.nemez.cmdmgr.component.ICommandComponent;
-import com.nemez.cmdmgr.component.IntegerComponent;
-import com.nemez.cmdmgr.component.LongComponent;
-import com.nemez.cmdmgr.component.OptionalComponent;
-import com.nemez.cmdmgr.component.ShortComponent;
-import com.nemez.cmdmgr.component.StringComponent;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 
 public class Executable extends org.bukkit.command.Command {
 
 	private ArrayList<ExecutableDefinition> commands;
-	private ArrayList<HelpPageCommand[]> help;
-	private String name;
-	private String methodContainerName;
-	private JavaPlugin plugin;
-	
+	private ArrayList<HelpPageCommand[]>    help;
+	private String                          name;
+	private String                          methodContainerName;
+	private JavaPlugin                      plugin;
+
 	public Executable(String name, ArrayList<HelpPageCommand[]> help, String methodContainerName) {
 		super(name);
 		this.help = help;
@@ -45,43 +34,43 @@ public class Executable extends org.bukkit.command.Command {
 		this.commands = new ArrayList<ExecutableDefinition>();
 		this.methodContainerName = methodContainerName;
 	}
-	
+
 	public String getMethodContainerName() {
 		return methodContainerName;
 	}
-	
+
 	public void register(ArrayList<Method> methods, JavaPlugin plugin, Object methodContainer, ArrayList<String> aliases) {
 		methodContainerName = methodContainer.getClass().getSimpleName().toLowerCase();
 		for (HelpPageCommand[] page : help) {
 			for (HelpPageCommand cmd : page) {
 				if (cmd != null) {
 					processLine(cmd.usage.split("\\ "), cmd.permission, cmd.method, methods, methodContainer, plugin, cmd.type);
-					String newUsage = "";
-					String buffer = "";
-					String typeBuffer = "";
-					boolean ignore = false;
-					boolean toBuffer = false;
+					String  newUsage   = "";
+					String  buffer     = "";
+					String  typeBuffer = "";
+					boolean ignore     = false;
+					boolean toBuffer   = false;
 					for (char c : cmd.usage.toCharArray()) {
 						if (c == '<') {
 							toBuffer = true;
-						}else if (c == ':') {
+						} else if (c == ':') {
 							toBuffer = false;
 							ignore = true;
-						}else if (c == '>') {
+						} else if (c == '>') {
 							ignore = false;
 							if (typeBuffer.equals("flag")) {
 								newUsage += '[' + buffer + (CommandManager.debugHelpMenu ? ':' + typeBuffer : "") + ']';
-							}else{
+							} else {
 								newUsage += '<' + buffer + (CommandManager.debugHelpMenu ? ':' + typeBuffer : "") + '>';
 							}
 							buffer = "";
 							typeBuffer = "";
-						}else{
+						} else {
 							if (toBuffer) {
 								buffer += c;
-							}else if (ignore) {
+							} else if (ignore) {
 								typeBuffer += c;
-							}else{
+							} else {
 								newUsage += c;
 							}
 						}
@@ -90,37 +79,38 @@ public class Executable extends org.bukkit.command.Command {
 				}
 			}
 		}
-		
+
 		this.plugin = plugin;
 		try {
 			final Field cmdMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
 			cmdMap.setAccessible(true);
-			CommandMap map = (CommandMap) cmdMap.get(Bukkit.getServer());
+			CommandMap  map                = (CommandMap) cmdMap.get(Bukkit.getServer());
 			final Field knownCommandsField = map.getClass().getSuperclass().getDeclaredField("knownCommands");
 			knownCommandsField.setAccessible(true);
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings ("unchecked")
 			Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(map);
 			knownCommands.remove(name);
 			map.register(methodContainerName, this);
 			for (String alias : aliases) {
-                            Executable cmd = new Executable(alias, this.help, methodContainerName);
-                            cmd.commands = this.commands;
-                            cmd.plugin = this.plugin;
-                            knownCommands.remove(alias);
-                            map.register(methodContainerName, cmd);
+				Executable cmd = new Executable(alias, this.help, methodContainerName);
+				cmd.commands = this.commands;
+				cmd.plugin = this.plugin;
+				knownCommands.remove(alias);
+				map.register(methodContainerName, cmd);
 			}
 		} catch (Exception e) {
 			plugin.getLogger().log(Level.SEVERE, "Failed to register command '" + name + "'!");
 			e.printStackTrace();
 		}
-		
+
 		if (CommandManager.errors) {
 			plugin.getLogger().log(Level.WARNING, "There were parser errors, some commands may not function properly!");
 			CommandManager.errors = false;
 		}
 	}
-	
-	private void processLine(String[] line, String permission, String method, ArrayList<Method> methods, Object methodContainer, JavaPlugin plugin, Type etype) {
+
+	private void processLine(String[] line, String permission, String method, ArrayList<Method> methods, Object methodContainer, JavaPlugin plugin,
+	                         Type etype) {
 		ArrayList<ICommandComponent> command = new ArrayList<ICommandComponent>();
 		if (method == null && line[1].equals("help")) {
 			command.add(new ConstantComponent("help"));
@@ -133,75 +123,75 @@ public class Executable extends org.bukkit.command.Command {
 		}
 		HashMap<Integer, ICommandComponent> methodParams = new HashMap<Integer, ICommandComponent>();
 		method = method.trim() + " ";
-		String[] methodArray = method.split(" ");
-		Method target = null;
-		ArrayList<Integer> links = new ArrayList<Integer>();
-		
+		String[]           methodArray = method.split(" ");
+		Method             target      = null;
+		ArrayList<Integer> links       = new ArrayList<Integer>();
+
 		for (String s : line) {
 			if (s.contains("/")) {
 				continue;
 			}
 			if (s.contains(":")) {
-				String[] type = s.split(":");
-				String paramName = "";
+				String[] type      = s.split(":");
+				String   paramName = "";
 				switch (type[1].substring(0, type[1].length() - 1)) {
-				case "i8":
-					ByteComponent comp1 = new ByteComponent();
-					comp1.argName = type[0].substring(1);
-					paramName = comp1.argName;
-					command.add(comp1);
-					break;
-				case "i16":
-					ShortComponent comp2 = new ShortComponent();
-					comp2.argName = type[0].substring(1);
-					paramName = comp2.argName;
-					command.add(comp2);
-					break;
-				case "i32":
-					IntegerComponent comp3 = new IntegerComponent();
-					comp3.argName = type[0].substring(1);
-					paramName = comp3.argName;
-					command.add(comp3);
-					break;
-				case "i64":
-					LongComponent comp4 = new LongComponent();
-					comp4.argName = type[0].substring(1);
-					paramName = comp4.argName;
-					command.add(comp4);
-					break;
-				case "fp32":
-					FloatComponent comp5 = new FloatComponent();
-					comp5.argName = type[0].substring(1);
-					paramName = comp5.argName;
-					command.add(comp5);
-					break;
-				case "fp64":
-					DoubleComponent comp6 = new DoubleComponent();
-					comp6.argName = type[0].substring(1);
-					paramName = comp6.argName;
-					command.add(comp6);
-					break;
-				case "str":
-					StringComponent comp7 = new StringComponent();
-					comp7.argName = type[0].substring(1).replace("...", "");
-					comp7.infinite = type[0].substring(1).contains("...");
-					paramName = comp7.argName;
-					command.add(comp7);
-					break;
-				case "bool":
-					BooleanComponent comp8 = new BooleanComponent();
-					comp8.argName = type[0].substring(1);
-					paramName = comp8.argName;
-					command.add(comp8);
-					break;
-				case "flag":
-					OptionalComponent comp9 = new OptionalComponent();
-					comp9.argName = type[0].substring(1);
-					paramName = comp9.argName;
-					command.add(comp9);
-					break;
-				default:
-					return;
+					case "i8":
+						ByteComponent comp1 = new ByteComponent();
+						comp1.argName = type[0].substring(1);
+						paramName = comp1.argName;
+						command.add(comp1);
+						break;
+					case "i16":
+						ShortComponent comp2 = new ShortComponent();
+						comp2.argName = type[0].substring(1);
+						paramName = comp2.argName;
+						command.add(comp2);
+						break;
+					case "i32":
+						IntegerComponent comp3 = new IntegerComponent();
+						comp3.argName = type[0].substring(1);
+						paramName = comp3.argName;
+						command.add(comp3);
+						break;
+					case "i64":
+						LongComponent comp4 = new LongComponent();
+						comp4.argName = type[0].substring(1);
+						paramName = comp4.argName;
+						command.add(comp4);
+						break;
+					case "fp32":
+						FloatComponent comp5 = new FloatComponent();
+						comp5.argName = type[0].substring(1);
+						paramName = comp5.argName;
+						command.add(comp5);
+						break;
+					case "fp64":
+						DoubleComponent comp6 = new DoubleComponent();
+						comp6.argName = type[0].substring(1);
+						paramName = comp6.argName;
+						command.add(comp6);
+						break;
+					case "str":
+						StringComponent comp7 = new StringComponent();
+						comp7.argName = type[0].substring(1).replace("...", "");
+						comp7.infinite = type[0].substring(1).contains("...");
+						paramName = comp7.argName;
+						command.add(comp7);
+						break;
+					case "bool":
+						BooleanComponent comp8 = new BooleanComponent();
+						comp8.argName = type[0].substring(1);
+						paramName = comp8.argName;
+						command.add(comp8);
+						break;
+					case "flag":
+						OptionalComponent comp9 = new OptionalComponent();
+						comp9.argName = type[0].substring(1);
+						paramName = comp9.argName;
+						command.add(comp9);
+						break;
+					default:
+						return;
 				}
 				int index = 0;
 				for (int i = 1; i < methodArray.length; i++) {
@@ -214,29 +204,29 @@ public class Executable extends org.bukkit.command.Command {
 						index++;
 					}
 				}
-			}else{
+			} else {
 				if (s.equals("<empty>")) {
-					
-				}else{
+
+				} else {
 					command.add(new ConstantComponent(s));
 				}
 			}
 		}
-		
+
 		for (Method m : methods) {
 			Command[] annotations = m.getAnnotationsByType(Command.class);
 			if (annotations == null || annotations.length != 1) {
 				plugin.getLogger().log(Level.WARNING, "Invalid method (" + methodArray[0] + ")");
 				CommandManager.errors = true;
 				return;
-			}else{
+			} else {
 				if (annotations[0].hook().equals(methodArray[0])) {
 					Class<?>[] params = m.getParameterTypes();
-					if (params.length -1 != methodParams.size()) {
+					if (params.length - 1 != methodParams.size()) {
 						plugin.getLogger().log(Level.WARNING, "Invalid method (" + methodArray[0] + "): Arguments don't match");
 						CommandManager.errors = true;
 						return;
-					}else{
+					} else {
 						for (int i = 0; i < params.length; i++) {
 							if (i == 0) {
 								if (params[0] != CommandSender.class) {
@@ -244,27 +234,27 @@ public class Executable extends org.bukkit.command.Command {
 									CommandManager.errors = true;
 									return;
 								}
-							}else{
+							} else {
 								ICommandComponent comp = methodParams.get(i - 1);
 								if (comp instanceof ByteComponent && params[i] == byte.class) {
-									
-								}else if (comp instanceof ShortComponent && params[i] == short.class) {
-									
-								}else if (comp instanceof IntegerComponent && params[i] == int.class) {
-									
-								}else if (comp instanceof LongComponent && params[i] == long.class) {
-									
-								}else if (comp instanceof FloatComponent && params[i] == float.class) {
-									
-								}else if (comp instanceof DoubleComponent && params[i] == double.class) {
-									
-								}else if (comp instanceof StringComponent && params[i] == String.class) {
-									
-								}else if (comp instanceof BooleanComponent && params[i] == boolean.class) {
-									
-								}else if (comp instanceof OptionalComponent && params[i] == boolean.class) {
-									
-								}else{
+
+								} else if (comp instanceof ShortComponent && params[i] == short.class) {
+
+								} else if (comp instanceof IntegerComponent && params[i] == int.class) {
+
+								} else if (comp instanceof LongComponent && params[i] == long.class) {
+
+								} else if (comp instanceof FloatComponent && params[i] == float.class) {
+
+								} else if (comp instanceof DoubleComponent && params[i] == double.class) {
+
+								} else if (comp instanceof StringComponent && params[i] == String.class) {
+
+								} else if (comp instanceof BooleanComponent && params[i] == boolean.class) {
+
+								} else if (comp instanceof OptionalComponent && params[i] == boolean.class) {
+
+								} else {
 									plugin.getLogger().log(Level.WARNING, "Invalid method (" + methodArray[0] + "): Invalid method arguments");
 									CommandManager.errors = true;
 									return;
@@ -286,7 +276,7 @@ public class Executable extends org.bukkit.command.Command {
 			etype = Type.BOTH;
 		}
 		ExecutableDefinition def;
-		AsyncType type = target.getAnnotation(Command.class).async();
+		AsyncType            type = target.getAnnotation(Command.class).async();
 		if (type == AsyncType.ALWAYS)
 			def = new AsyncExecutableDefinition(command, links, permission, target, methodContainer, etype);
 		else
@@ -295,27 +285,27 @@ public class Executable extends org.bukkit.command.Command {
 		if (def instanceof AsyncExecutableDefinition)
 			CommandManager.asyncExecutables.add(this);
 	}
-	
+
 	@Override
 	public boolean execute(CommandSender sender, String name, String[] args_) {
 		String[] args;
 		if (args_.length == 0) {
 			args = new String[0];
-		}else{
+		} else {
 			ArrayList<String> tempArgs = new ArrayList<String>();
-			String temp = "";
-			int counter = 0;
+			String            temp     = "";
+			int               counter  = 0;
 			for (String s : args_) {
 				if (s.endsWith("\\")) {
 					if ((s.length() > 1 && s.charAt(s.length() - 2) == '\\') || counter + 1 == args_.length) {
 						// escaped \
 						tempArgs.add(temp + s.replace("\\\\", "\\"));
 						temp = "";
-					}else{
+					} else {
 						// unescaped \
 						temp += s.substring(0, s.length() - 1).replace("\\\\", "\\") + " ";
 					}
-				}else{
+				} else {
 					tempArgs.add(temp + s);
 					temp = "";
 				}
@@ -327,7 +317,7 @@ public class Executable extends org.bukkit.command.Command {
 			}
 		}
 		ArrayList<ExecutableDefinition> defs = new ArrayList<ExecutableDefinition>();
-		
+
 		if (args.length == 0) {
 			for (ExecutableDefinition d : commands) {
 				if (d.getLength(0) == 0) {
@@ -335,9 +325,10 @@ public class Executable extends org.bukkit.command.Command {
 					break;
 				}
 			}
-		}else{
+		} else {
 			defs.addAll(commands);
-			defLoop: for (int j = 0; j < defs.size(); j++) {
+			defLoop:
+			for (int j = 0; j < defs.size(); j++) {
 				if (defs.get(j).getLength(args.length) == 0) {
 					defs.remove(j);
 					j--;
@@ -350,7 +341,7 @@ public class Executable extends org.bukkit.command.Command {
 							defs.remove(j);
 							j--;
 							continue defLoop;
-						}else{
+						} else {
 							i--;
 							continue;
 						}
@@ -364,7 +355,7 @@ public class Executable extends org.bukkit.command.Command {
 		}
 		if (defs.size() == 0) {
 			printPage(sender, 1);
-		}else{
+		} else {
 			ExecutableDefinition def = defs.get(0);
 			for (ExecutableDefinition d : defs) {
 				if (d.isHelp() && args[0].equals("help")) {
@@ -378,20 +369,24 @@ public class Executable extends org.bukkit.command.Command {
 				}
 			}
 			if (def.getPermission() != null && !def.getPermission().equals("null") && !sender.hasPermission(def.getPermission())) {
-				sender.sendMessage(ChatColor.translateAlternateColorCodes('&', CommandManager.noPermissionFormatting + "You do not have permission to execute this command."));
+				sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
+				                                                          CommandManager.noPermissionFormatting + "You do not have permission to execute this command."
+				));
 				return true;
 			}
 			if (def.getExecType() == Type.PLAYER) {
 				if (!(sender instanceof Player)) {
-					sender.sendMessage(ChatColor.translateAlternateColorCodes('&', CommandManager.notAllowedFormatting + "Only players are allowed to run this command."));
+					sender.sendMessage(
+							ChatColor.translateAlternateColorCodes('&', CommandManager.notAllowedFormatting + "Only players are allowed to run this command."));
 					return true;
 				}
-			}else if (def.getExecType() == Type.CONSOLE) {
+			} else if (def.getExecType() == Type.CONSOLE) {
 				if (sender instanceof Player) {
-					sender.sendMessage(ChatColor.translateAlternateColorCodes('&', CommandManager.notAllowedFormatting + "Only console is allowed to run this command."));
+					sender.sendMessage(
+							ChatColor.translateAlternateColorCodes('&', CommandManager.notAllowedFormatting + "Only console is allowed to run this command."));
 					return true;
 				}
-			}else if (def.getExecType() == Type.NOBODY) {
+			} else if (def.getExecType() == Type.NOBODY) {
 				sender.sendMessage(ChatColor.translateAlternateColorCodes('&', CommandManager.notAllowedFormatting + "Nobody can run this command."));
 				return true;
 			}
@@ -400,7 +395,7 @@ public class Executable extends org.bukkit.command.Command {
 				if (def.isArgument(j)) {
 					if (def.valid(j, args[i])) {
 						arguments.add(def.get(j, args[i]));
-					}else if (def.isOptional(j)) {
+					} else if (def.isOptional(j)) {
 						arguments.add(false);
 						i--;
 					}
@@ -411,7 +406,7 @@ public class Executable extends org.bukkit.command.Command {
 				int link = def.getLink(i) + 1;
 				if (linkedArgs[link] != null) {
 					linkedArgs[link] = linkedArgs[link].toString() + " " + arguments.get(i).toString();
-				}else{
+				} else {
 					linkedArgs[link] = arguments.get(i);
 				}
 			}
@@ -421,14 +416,19 @@ public class Executable extends org.bukkit.command.Command {
 		}
 		return true;
 	}
-	
+
 	private void printPage(CommandSender sender, int page) {
 		page--;
 		if (page < 0 || page >= help.size()) {
-			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', CommandManager.helpInvalidPageFormatting + "Non-existant page (" + (page + 1) + ").\nThere are " + help.size() + " pages."));
-		}else{
+			sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
+			                                                          CommandManager.helpInvalidPageFormatting + "Non-existant page (" + (page + 1) + ").\nThere are " + help
+					                                                          .size() + " pages."
+			));
+		} else {
 			HelpPageCommand[] pageData = help.get(page);
-			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', CommandManager.helpPageHeaderFormatting + "### Help Page " + (page + 1) + "/" + (help.size()) + " ###"));
+			sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
+			                                                          CommandManager.helpPageHeaderFormatting + "### Help Page " + (page + 1) + "/" + (help.size()) + " ###"
+			));
 			for (HelpPageCommand c : pageData) {
 				if (c != null) {
 					if (c.type == null || c.type == Type.BOTH || (c.type == Type.CONSOLE && !(sender instanceof Player)) || (c.type == Type.PLAYER && sender instanceof Player)) {

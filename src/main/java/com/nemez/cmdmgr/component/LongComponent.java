@@ -20,7 +20,7 @@ public class LongComponent extends ArgumentComponent {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
 		return "<" + argName + ":i64>";

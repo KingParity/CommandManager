@@ -1,7 +1,7 @@
 package com.nemez.cmdmgr.component;
 
 public class OptionalComponent extends ArgumentComponent {
-	
+
 	@Override
 	public Object get(String input) {
 		return input.equals(argName);

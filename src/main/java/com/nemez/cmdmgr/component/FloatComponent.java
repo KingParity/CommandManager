@@ -20,7 +20,7 @@ public class FloatComponent extends ArgumentComponent {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
 		return "<" + argName + ":fp32>";

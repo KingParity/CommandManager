@@ -5,16 +5,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Command
-{
-	enum AsyncType
-	{
+@Target (ElementType.METHOD)
+@Retention (RetentionPolicy.RUNTIME)
+public @interface Command {
+	String hook();
+
+	AsyncType async() default AsyncType.NEVER;
+
+	enum AsyncType {
 		NEVER, ALWAYS;
 	}
-	
-	String hook();
-	
-	AsyncType async() default AsyncType.NEVER;
 }

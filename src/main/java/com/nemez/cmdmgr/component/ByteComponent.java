@@ -1,7 +1,7 @@
 package com.nemez.cmdmgr.component;
 
 public class ByteComponent extends ArgumentComponent {
-	
+
 	@Override
 	public Object get(String input) {
 		try {
@@ -20,9 +20,9 @@ public class ByteComponent extends ArgumentComponent {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
-		return "<" + argName +  ":i8>";
+		return "<" + argName + ":i8>";
 	}
 }

@@ -20,7 +20,7 @@ public class DoubleComponent extends ArgumentComponent {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public String getComponentInfo() {
 		return "<" + argName + ":fp64>";
